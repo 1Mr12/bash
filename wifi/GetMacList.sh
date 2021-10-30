@@ -27,11 +27,11 @@ do
 done
 
 
-
+#dpkg -s $1 &> /dev/null [ $? -eq 0 ] > installed 1 > not installed
 function installAllPackages(){
     read -p "Do you want to install missing Packages [y]: " answer
     if [[ $answer =~ [yY] ]];then sudo apt-get install -y ${packgeNeeded[@]}  ;else echo You must install all packges && exit ;fi
-
+    
 }
 
 
