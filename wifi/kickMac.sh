@@ -25,7 +25,7 @@ do
             echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online"
             ;;
         l)
-            nmcli device wifi list ifname $OPTARG || echo -e "\n-l interface name " ; iw dev| grep "Interface"
+            nmcli device wifi list ifname $OPTARG || echo -e "\n-l interface name "
             exit
             ;;
         c)
@@ -181,6 +181,6 @@ then
     GetMacList "-d $wifiBssid" $checkTarget
 else
     echo -e "You Must Give Essid or bssid \n"
-    if [ ! -z $1 ]; then deviceVendore $1 ;fi
+    if [[ $1 =~ ":" ]]; then deviceVendore $1 ;elif [[ $1 == "-r" ]];then resetMode ;fi
 fi
 
