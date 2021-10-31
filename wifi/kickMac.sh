@@ -12,7 +12,7 @@ fi
 # Get arguments 
 # reset True > disable monitor mode befor exit
 # r and l without : coz thir is no input 
-while getopts "b:e:harl:c:" option ; 
+while getopts "b:e:harl:c:t:" option ; 
 do
     case $option in
         e) # set wiff essid
@@ -33,6 +33,9 @@ do
             ;;
         a)
             Kickall=True
+            ;;
+        t)
+            checkTarget=$OPTARG
             ;;
         \?) # unexpected arguments 
             echo -e "\nunexpected argument run -h for help "
@@ -108,8 +111,14 @@ function GetMacList() {
     echo $interface is on Monitor Mode
     sudo airodump-ng $1 -i $interface --output-format csv -w temp
     # grep the devices mac
-    cat temp-01.csv | cut -d , -f 1 
-    sudo rm -f temp*
+    if [ ! -z $checkTarget ]
+    then
+        if grep -q "$2" temp-01.csv ; then echo -e "\n$2 is online" ; else echo not found; fi
+        sudo rm -f temp*
+    else
+        cat temp-01.csv | cut -d , -f 1 
+        sudo rm -f temp*
+    fi
     resetMode
 }
 
@@ -136,7 +145,7 @@ dpkg -s ${packgeNeeded[@]} > /dev/null 2>&1 || installAllPackages
 interface=$(startMonitorMode)
 
 # if the bessid is given 
-if [ ! -z $wifiBssid ] && [ -z $targetMac ] && [ -z Kickall ]
+if [ ! -z $wifiBssid ] && [ -z $targetMac ] && [ -z $Kickall ] && [ -z $checkTarget ]
 then
     # Start GetMacList function with essid option
     GetMacList "-d $wifiBssid"
@@ -156,6 +165,9 @@ elif [ ! -z $wifiBssid ] && [ ! -z $Kickall ]
 then
     kickUser $wifiBssid $interface $Kickall
     exit
+elif [ ! -z $wifiBssid ] && [ $checkTarget ]
+then
+    GetMacList "-d $wifiBssid" $checkTarget
 else
     echo "You Must Give Essid or bssid "
 fi
