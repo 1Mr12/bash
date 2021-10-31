@@ -134,7 +134,11 @@ function kickUser(){
     resetMode
 }
 
-
+function deviceVendore(){
+    mac=$(echo $1 | tr ":" "-")
+    mac=${mac:0:8}
+    grep $mac vendor.txt |cut -f 3
+}
 
 # ================================= Functions ================================= #
 
@@ -169,6 +173,7 @@ elif [ ! -z $wifiBssid ] && [ $checkTarget ]
 then
     GetMacList "-d $wifiBssid" $checkTarget
 else
-    echo "You Must Give Essid or bssid "
+    echo -e "You Must Give Essid or bssid \n"
+    if [ ! -z $1 ]; then deviceVendore $1 ;fi
 fi
 
