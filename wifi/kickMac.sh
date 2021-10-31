@@ -137,7 +137,14 @@ function kickUser(){
 function deviceVendore(){
     mac=$(echo $1 | tr ":" "-")
     mac=${mac:0:8}
-    grep $mac vendor.txt |cut -f 3
+    if [ -f vendor.txt ]; then
+        grep $mac vendor.txt |cut -f 3
+    else
+        echo "vendor database file doesn't exist"
+        read -p "Do you wand to download it[y]: " answer
+        if [[ $answer =~ [yY] ]];then wget https://github.com/1Mr12/bash/raw/main/wifi/vendor.txt > /dev/null 2>&1 ;fi
+        deviceVendore $1
+    fi
 }
 
 # ================================= Functions ================================= #
