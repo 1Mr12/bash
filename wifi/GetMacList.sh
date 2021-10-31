@@ -19,7 +19,7 @@ do
         b)
             wifiBssid=$OPTARG;;
         r)
-            rest=True;;
+            reset=True;;
         h)
             echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi"
             ;;
@@ -31,6 +31,9 @@ do
             exit;;
     esac
 done
+
+
+# ================================= Functions ================================= #
 
 
 # check for used packages
@@ -63,12 +66,12 @@ function startMonitorMode {
 
 }
 
-# stor monitor mode 
+# stop monitor mode 
 function stopMonitorMode() {
-    sudo airmon-ng stop $1 > /dev/null 2>&1
+    interface=$(iw dev | grep Interface |cut -d " " -f2)
+    sudo airmon-ng stop $interface > /dev/null 2>&1
     echo seting MonitorMode off
     # Check if monitor mode is off
-    interface=$(iw dev | grep Interface |cut -d " " -f2)
     interfaceMode=$(iwconfig $interface |grep -o Monitor)
     # if monitor mode still enabled 
     # Try another way to stop it 
@@ -83,6 +86,13 @@ function stopMonitorMode() {
     
 }
 
+function resetMode(){
+    if [ $reset ]
+    then
+        stopMonitorMode 
+    fi
+
+}
 
 # Get mac list 
 function GetMacList() {
@@ -90,15 +100,18 @@ function GetMacList() {
     interfacee=$(startMonitorMode)
     echo $interfacee is on Monitor Mode
     sudo airodump-ng $1 -i $interfacee --output-format csv -w temp
-    clear
     # grep the devices mac
     cat temp-01.csv | cut -d , -f 1 
     sudo rm -f temp*
-    if [ $rest ]
-    then
-        stopMonitorMode $interfacee
-    fi
+    resetMode
 }
+
+
+
+# ================================= Functions ================================= #
+
+
+
 
 # Check for all needed packges first  - if one is missing > install all
 dpkg -s ${packgeNeeded[@]} > /dev/null 2>&1 || installAllPackages 
