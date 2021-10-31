@@ -31,6 +31,9 @@ do
         c)
             targetMac=$OPTARG
             ;;
+        a)
+            Kickall=True
+            ;;
         \?) # unexpected arguments 
             echo -e "\n-e for wifi essid\n-b for wifi bssid "
             exit;;
@@ -101,9 +104,9 @@ function resetMode(){
 # Get mac list 
 function GetMacList() {
     # start monitor mode and return the name of the interface
-    interfacee=$(startMonitorMode)
-    echo $interfacee is on Monitor Mode
-    sudo airodump-ng $1 -i $interfacee --output-format csv -w temp
+    #interfacee=$(startMonitorMode)
+    echo $interface is on Monitor Mode
+    sudo airodump-ng $1 -i $interface --output-format csv -w temp
     # grep the devices mac
     cat temp-01.csv | cut -d , -f 1 
     sudo rm -f temp*
@@ -124,6 +127,9 @@ function kickUser(){
 # Check for all needed packges first  - if one is missing > install all
 dpkg -s ${packgeNeeded[@]} > /dev/null 2>&1 || installAllPackages 
 
+
+interface=$(startMonitorMode)
+
 # if the bessid is given 
 if [ ! -z $wifiBssid ] && [ -z $targetMac ]
 then
@@ -139,9 +145,11 @@ then
     exit
 elif [ ! -z $wifiBssid ] && [ ! -z $targetMac ]
 then
-    interfacee=$(startMonitorMode)
-    echo $interfacee is on Monitor Mode
-    kickUser $wifiBssid $targetMac $interfacee
+    kickUser $wifiBssid $targetMac $interface
+    exit
+elif [ ! -z $wifiBssid ] && [ ! -z $Kickall ]
+then
+    kickUser $wifiBssid $targetMac $interface $Kickall
     exit
 else
     echo "You Must Give Essid or bssid "
