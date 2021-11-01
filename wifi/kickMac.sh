@@ -12,7 +12,7 @@ fi
 # Get arguments 
 # reset True > disable monitor mode befor exit
 # r and l without : coz thir is no input 
-while getopts "b:e:harl:c:t:" option ; 
+while getopts "b:e:vharl:c:t:" option ; 
 do
     case $option in
         e) # set wiff essid
@@ -22,7 +22,7 @@ do
         r)
             reset=True;;
         h)
-            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online"
+            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online\nonly mac for mac vendore\n"
             ;;
         l)
             nmcli device wifi list ifname $OPTARG || echo -e "\n-l interface name "
@@ -36,6 +36,9 @@ do
             ;;
         t)
             checkTarget=$OPTARG
+            ;;
+        v)
+            allVendor=True
             ;;
         \?) # unexpected arguments 
             echo -e "\nunexpected argument run -h for help "
@@ -110,15 +113,27 @@ function GetMacList() {
     #interfacee=$(startMonitorMode)
     echo $interface is on Monitor Mode
     sudo airodump-ng $1 -i $interface --output-format csv -w temp
+    echo -e "\n------------------- Results ---------------------\n"
     # grep the devices mac
     if [ ! -z $checkTarget ]
     then
         if grep -q "$2" temp-01.csv ; then echo -e "\n$2 is online" ; else echo not found; fi
         sudo rm -f temp*
     else
-        cat temp-01.csv | cut -d , -f 1 
+        cat temp-01.csv | cut -d , -f 1 > result
+        if [ ! -z $allVendor ]
+        then
+            for i in $(grep "^..:" result)
+            do 
+                macVendore=$(deviceVendore $i)
+                echo -e "\n$i is $macVendore" ; 
+            done
+        else
+            cat result
+        fi
         sudo rm -f temp*
     fi
+    echo -e "\n\n------------------- Results ---------------------\n"
     resetMode
 }
 
@@ -160,13 +175,13 @@ if [ ! -z $wifiBssid ] && [ -z $targetMac ] && [ -z $Kickall ] && [ -z $checkTar
 then
     # Start GetMacList function with essid option
     GetMacList "-d $wifiBssid"
-    echo "use -b essid -c TargeMac option to kick user"
+    echo -e "\nuse -b essid -c TargeMac option to kick user"
     exit
 elif [ ! -z $wifiEssid ]
 then
     # Start GetMacList function with essid option
     GetMacList "--essid $wifiEssid"
-    echo "use -b essid -c TargeMac option to kick user"
+    echo -e "\nuse -b essid -c TargeMac option to kick user"
     exit
 elif [ ! -z $wifiBssid ] && [ ! -z $targetMac ]
 then
