@@ -12,7 +12,7 @@ fi
 # Get arguments 
 # reset True > disable monitor mode befor exit
 # r and l without : coz thir is no input 
-while getopts "b:e:vharl:c:t:d:" option ; 
+while getopts "b:e:vharl:c:t:d:i:" option ; 
 do
     case $option in
         e) # set wiff essid
@@ -22,7 +22,7 @@ do
         r)
             reset=True;;
         h)
-            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online\nonly mac for mac vendore\n"
+            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online\n-i interface name\nonly mac for mac vendore\n"
             ;;
         l)
             nmcli device wifi list ifname $OPTARG || echo -e "\n-l interface name "
@@ -42,6 +42,9 @@ do
             ;;
         d)
             numberOfKickPackets=$OPTARG
+            ;;
+        i)
+            interfaceName=$OPTARG
             ;;
         \?) # unexpected arguments 
             echo -e "\nunexpected argument run -h for help "
@@ -63,9 +66,13 @@ function installAllPackages(){
 
 # start monitor mode 
 function startMonitorMode {
-    # get the current interface name
-    interface=$(iw dev | grep Interface |cut -d " " -f2)
-    
+    if [ ! -z $interfaceName ]
+    then
+        interface=$interfaceName
+    else
+        # get the current interface name
+        interface=$(iw dev | grep Interface |cut -d " " -f2)
+    fi
     # Check if monitor mode is on 
     interfaceMode=$(iwconfig $interface |grep -o Monitor)
     # if $interfaceMode is not empty > return interface name else start monitor mode
@@ -103,7 +110,7 @@ function stopMonitorMode() {
 }
 
 function resetMode(){
-    if [ $reset ]
+    if [ ! -z $reset ]
     then
         stopMonitorMode 
     fi
