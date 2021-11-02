@@ -22,8 +22,8 @@ do
         r)
             reset=True;;
         h)
-            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online\n-i interface name\nonly mac for mac vendore\n"
-            ;;
+            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online\n-i interface name\n[Mac] only mac for mac vendore\n"
+            exit ;;
         l)
             nmcli device wifi list ifname $OPTARG || echo -e "\n-l interface name "
             exit
