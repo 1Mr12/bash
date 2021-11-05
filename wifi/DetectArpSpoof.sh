@@ -1,5 +1,13 @@
 #!/bin/env bash
 
+packgeNeeded=("arping")
+
+function installAllPackages(){
+    read -p "Do you want to install missing Packages [y]: " answer
+    if [[ $answer =~ [yY] ]];then sudo apt-get install -y ${packgeNeeded[@]}  ;else echo You must install all packges && exit ;fi
+    
+}
+
 
 # echo help if no arguments were given 
 if [ $# -eq 0 ]
@@ -56,6 +64,7 @@ function detectArpSpoof(){
 
 
 
+dpkg -s ${packgeNeeded[@]} > /dev/null 2>&1 || installAllPackages 
 
 
 trap finish SIGINT
