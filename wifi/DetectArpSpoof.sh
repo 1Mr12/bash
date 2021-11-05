@@ -1,5 +1,13 @@
 #!/bin/env bash
 
+
+# echo help if no arguments were given 
+if [ $# -eq 0 ]
+then
+    echo -e "run [range] [ InterfaceName ]\nExample 192.168.1 wlan0 "
+    exit
+fi
+
 << "subnet"
 
 for SUBNET in {1..255}
