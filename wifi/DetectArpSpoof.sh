@@ -4,7 +4,7 @@ packgeNeeded=("arping")
 
 function installAllPackages(){
     read -p "Do you want to install missing Packages [y]: " answer
-    if [[ $answer =~ [yY] ]];then sudo apt-get install -y ${packgeNeeded[@]}  ;else echo You must install all packges && exit ;fi
+    if [[ $answer =~ [yY] ]];then sudo apt-get install -y ${packgeNeeded[@]} && exit ;else echo You must install all packges && exit ;fi
     
 }
 
@@ -44,7 +44,7 @@ function detectArpSpoof(){
     for subnet in {1..255}
     do
         result=$(sudo arping -r -c 1 -d -i $INTERFACE $PREFIX.$subnet)
-        echo "what " $result
+        #echo "what " $result
         if [ ! -z $result ]
         then
             NumberOfMac=$(echo $result | wc -l )
