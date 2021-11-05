@@ -48,6 +48,7 @@ function detectArpSpoof(){
         if [ ! -z $result ]
         then
             NumberOfMac=$(echo $result | wc -l )
+            echo " $NumberOfMac For  $PREFIX.$subnet $result " 
             if [[  ($NumberOfMac > 1) ]]
             then
                 echo "Mac spoofing detected" echo -n "[*] Ip: $PREFIX.$subnet " $result
