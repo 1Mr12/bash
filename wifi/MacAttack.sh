@@ -166,7 +166,7 @@ function deviceVendore(){
     mac=$(echo $1 | tr ":" "-")
     mac=${mac:0:8}
     if [ -f vendor.txt ]; then
-        grep $mac vendor.txt |cut -f 3
+        grep -i $mac vendor.txt |cut -f 3
     else
         echo "vendor database file doesn't exist"
         read -p "Do you wand to download it[y]: " answer
@@ -181,31 +181,35 @@ function deviceVendore(){
 dpkg -s ${packgeNeeded[@]} > /dev/null 2>&1 || installAllPackages 
 
 
-interface=$(startMonitorMode)
 
 # if the bessid is given 
 if [ ! -z $wifiBssid ] && [ -z $targetMac ] && [ -z $Kickall ] && [ -z $checkTarget ]
 then
+    interface=$(startMonitorMode)
     # Start GetMacList function with essid option
     GetMacList "-d $wifiBssid"
     echo -e "\nuse -b essid -c TargeMac option to kick user"
     exit
 elif [ ! -z $wifiEssid ]
 then
+    interface=$(startMonitorMode)
     # Start GetMacList function with essid option
     GetMacList "--essid $wifiEssid"
     echo -e "\nuse -b essid -c TargeMac option to kick user"
     exit
 elif [ ! -z $wifiBssid ] && [ ! -z $targetMac ]
 then
+    interface=$(startMonitorMode)
     kickUser $wifiBssid $targetMac $interface
     exit
 elif [ ! -z $wifiBssid ] && [ ! -z $Kickall ] 
 then
+    interface=$(startMonitorMode)
     kickUser $wifiBssid $interface $Kickall
     exit
 elif [ ! -z $wifiBssid ] && [ $checkTarget ]
 then
+    interface=$(startMonitorMode)
     GetMacList "-d $wifiBssid" $checkTarget
 else
     echo -e "You Must Give Essid or bssid \n"
