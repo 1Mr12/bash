@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 
 packgeNeeded=("aircrack-ng" "iw" "wireless-tools" "network-manager" )
