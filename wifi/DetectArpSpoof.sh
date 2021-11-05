@@ -35,11 +35,17 @@ function finish() {
 function detectArpSpoof(){
     for subnet in {1..255}
     do
-        result=$(sudo arping -r -c 1 -d -i $INTERFACE $PREFIX.$subnet)
+        result=$(sudo arping -r -c 1 -d -i $INTERFACE $PREFIX.$subnet) 
         if [ ! -z $result ]
         then
-            echo -n "[*] Ip: $PREFIX.$subnet " $result
-            echo ""
+            NumberOfMac=$(echo $result | wc -l )
+            if [[  ($NumberOfMac > 1) ]]
+            then
+                echo "Mac spoofing detected" echo -n "[*] Ip: $PREFIX.$subnet " $result
+            else
+                echo -n "[*] Ip: $PREFIX.$subnet " $result
+                echo ""
+            fi
         else
             echo -en " $subnet \r"
         fi
