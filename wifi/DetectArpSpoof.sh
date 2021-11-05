@@ -35,7 +35,8 @@ function finish() {
 function detectArpSpoof(){
     for subnet in {1..255}
     do
-        result=$(sudo arping -r -c 1 -d -i $INTERFACE $PREFIX.$subnet) 
+        result=$(sudo arping -r -c 1 -d -i $INTERFACE $PREFIX.$subnet)
+        echo "what " $result
         if [ ! -z $result ]
         then
             NumberOfMac=$(echo $result | wc -l )
