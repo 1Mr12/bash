@@ -74,9 +74,9 @@ function detectMacSpoof(){
     then
         echo -e "No mac spoofing detected "
     else
-        echo -e "Found Duplication ip\n"
+        echo -e "Found Duplication ip"
         spoofedIp=$(echo -e "$listOfIpMac" | uniq -d) 
-        echo -e "$spoofedIp\nWith Mac Adress\n"
+        echo -e "$spoofedIp\n\nWith Mac Adress\n"
         sudo arp-scan -I $1 --localnet -q -x | grep -i "$spoofedIp" 
     fi
 }
