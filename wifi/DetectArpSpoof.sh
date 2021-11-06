@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-packgeNeeded=("arping")
+packgeNeeded=("arp-scan")
 
 function installAllPackages(){
     read -p "Do you want to install missing Packages [y]: " answer
@@ -12,7 +12,7 @@ function installAllPackages(){
 # echo help if no arguments were given 
 if [ $# -eq 0 ]
 then
-    echo -e "run [range] [ InterfaceName ]\nExample 192.168.1 wlan0 "
+    echo -e "run [ InterfaceName ]\nExample wlan0 "
     exit
 fi
 
@@ -28,17 +28,7 @@ arping –c 3 –i $INTERFACE $PREFIX"."$SUBNET"."$HOST 2>
 done
 done
 
-subnet
 
-
-PREFIX=$1
-INTERFACE=$2
-
-
-function finish() {
-        echo -e "\nDone"
-        exit 0
-}
 
 function detectArpSpoof(){
     for subnet in {1..255}
@@ -63,6 +53,28 @@ function detectArpSpoof(){
 }
 
 
+subnet
+
+
+PREFIX=$1
+INTERFACE=$2
+
+
+function finish() {
+        echo -e "\nDone"
+        exit 0
+}
+
+
+# pass $interfaceName
+function detectMacSpoof(){
+    listOfIpMac=$(sudo arp-scan -I $1 --localnet -q -x -r 1 )
+    listOfIp=$(echo $listOfIpMac | cut -f 1 | sort)
+    removeDuplication=$(echo $listOfIp | uniq )
+    echo -e " $listOfIp\n \n $removeDuplication "
+}
+
+
 
 
 dpkg -s ${packgeNeeded[@]} > /dev/null 2>&1 || installAllPackages 
@@ -74,7 +86,7 @@ if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 
    exit 1
 else
-    detectArpSpoof
+    detectMacSpoof $1
 fi
 
 
