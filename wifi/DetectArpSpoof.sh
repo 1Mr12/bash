@@ -80,6 +80,7 @@ function detectMacSpoof(){
     else
         echo -e "Found Duplication ip"
         echo -e "$listOfIp"
+    fi
 }
 
 
