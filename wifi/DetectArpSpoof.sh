@@ -74,7 +74,7 @@ function detectMacSpoof(){
     echo "remove \n"
     removeDuplication=$(echo $listOfIp | uniq )
     echo -e $removeDuplication
-    if [ $listOfIp == $removeDuplication ]
+    if [ "$listOfIp" == "$removeDuplication" ]
     then
         echo -e "No mac spoofing detected "
     else
