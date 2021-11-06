@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-packgeNeeded=("aircrack-ng" "iw" "wireless-tools" "network-manager" )
+packgeNeeded=("aircrack-ng" "iw" "wireless-tools" "network-manager" "macchanger" )
 
 # echo help if no arguments were given 
 if [ $# -eq 0 ]
@@ -12,7 +12,7 @@ fi
 # Get arguments 
 # reset True > disable monitor mode befor exit
 # r and l without : coz thir is no input 
-while getopts "b:e:vharl:c:t:d:i:" option ; 
+while getopts "b:e:vharl:c:t:d:i:m:A" option ; 
 do
     case $option in
         e) # set wiff essid
@@ -22,7 +22,7 @@ do
         r)
             reset=True;;
         h)
-            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online\n-i interface name\n[Mac] only mac for mac vendore\n"
+            echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online\n-i interface name\n[Mac] only mac for mac vendore\n-m [mac]  -i [interface] change mac\n-A -i [interface]reset mac "
             exit ;;
         l)
             nmcli device wifi list ifname $OPTARG || echo -e "\n-l interface name "
@@ -45,6 +45,12 @@ do
             ;;
         i)
             interfaceName=$OPTARG
+            ;;
+        m)
+            newMac=$OPTARG
+            ;;
+        A)
+            resetMac=True
             ;;
         \?) # unexpected arguments 
             echo -e "\nunexpected argument run -h for help "
@@ -175,6 +181,22 @@ function deviceVendore(){
     fi
 }
 
+
+
+function spoofMac(){
+    if [ ! -z $1 ] && [ ! -z $2 ]
+    then
+        echo "Spoof Mac to $1"
+        sudo ifconfig $2 down
+        sudo macchanger -m $1 $2
+        sudo ifconfig $2 up
+    elif [ -z $1 ] && [ -z $2 ]
+    then
+        echo "Reset Mac to orignal"
+        sudo macchanger -p $interfaceName
+    fi
+}
+
 # ================================= Functions ================================= #
 
 # Check for all needed packges first  - if one is missing > install all
@@ -211,8 +233,20 @@ elif [ ! -z $wifiBssid ] && [ $checkTarget ]
 then
     interface=$(startMonitorMode)
     GetMacList "-d $wifiBssid" $checkTarget
+elif [ ! -z $newMac ] && [ ! -z $interfaceName ]
+then
+    spoofMac $newMac $interfaceName
 else
-    echo -e "You Must Give Essid or bssid \n"
-    if [[ $1 =~ ":" ]]; then deviceVendore $1 ;elif [[ $1 == "-r" ]];then resetMode ;fi
+    #echo -e "You Must Give Essid or bssid \n"
+    if [[ $1 =~ ":" ]]
+    then
+        deviceVendore $1
+    elif [[ $1 == "-r" ]]
+    then
+        resetMode
+    elif [[ ! -z $resetMac ]]
+    then
+        spoofMac 
+    fi
 fi
 
