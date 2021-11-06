@@ -69,7 +69,7 @@ function finish() {
 # pass $interfaceName
 function detectMacSpoof(){
     listOfIpMac=$(sudo arp-scan -I $1 --localnet -q -x -r 1 )
-    listOfIp=$(echo $listOfIpMac | cut -f 1 | sort)
+    listOfIp=$(echo $listOfIpMac | cut -d " " -f 1 | sort)
     echo -e $listOfIp
     echo "remove \n"
     removeDuplication=$(echo $listOfIp | uniq )
